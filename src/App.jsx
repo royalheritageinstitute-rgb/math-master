@@ -718,7 +718,7 @@ export default function App() {
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-400 to-indigo-600 p-4 text-white font-sans">
         <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl shadow-xl w-full max-w-md text-center border border-white/20">
           <Brain className="w-20 h-20 mx-auto mb-4 text-yellow-300" />
-          <h1 className="text-4xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-300">Math Master</h1>
+          <h1 className="text-4xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-300">Study Master</h1>
           <h2 className="text-xl font-bold text-white mb-2">Royal Heritage School</h2>
           <p className="mb-8 text-blue-100">Educational Games for Students</p>
           <input type="text" placeholder="Enter Your Name" value={playerName} onChange={(e) => setPlayerName(e.target.value)} className="w-full px-6 py-4 rounded-xl text-gray-800 text-xl font-bold mb-6 focus:ring-4 focus:ring-yellow-400 outline-none" autoFocus />
