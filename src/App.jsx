@@ -1,34 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Play, Settings, RotateCcw, Trophy, Star, Heart,
-  Circle, Square, Triangle, Hexagon, Cloud, Sun,
-  CheckCircle, XCircle, ArrowRight, Home, Brain,
+import { 
+  Play, Settings, RotateCcw, Trophy, Star, Heart, 
+  Circle, Square, Triangle, Hexagon, Cloud, Sun, 
+  CheckCircle, XCircle, ArrowRight, Home, Brain, 
   Calculator, Palette, Shapes, Ruler, Zap, BookOpen, Tag, Languages,
   Type, Wand2, GraduationCap, Baby, School, Backpack, Feather, Grid3X3
 } from 'lucide-react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
+import { 
+  Chart as ChartJS, 
+  CategoryScale, 
+  LinearScale, 
+  BarElement, 
+  Title, 
+  Tooltip, 
+  Legend 
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { initializeApp } from "firebase/app";
-import {
-  getAuth,
-  signInAnonymously,
-  signInWithCustomToken,
-  onAuthStateChanged
+import { 
+  getAuth, 
+  signInAnonymously, 
+  signInWithCustomToken, 
+  onAuthStateChanged 
 } from "firebase/auth";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  serverTimestamp
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  onSnapshot, 
+  serverTimestamp 
 } from "firebase/firestore";
 
 // --- CHART REGISTRATION ---
@@ -42,6 +42,8 @@ ChartJS.register(
 );
 
 // --- FIREBASE SETUP ---
+// NOTE: When running locally or on your own website, replace the values below with your actual Firebase project config.
+// You can get these from the Firebase Console -> Project Settings -> General -> Your Apps
 const firebaseConfig = {
   apiKey: "AIzaSyBOxW7jSfP5kfdYh_JJ8aRkXoe1vh0ZQBI",
   authDomain: "royalheritagegame.firebaseapp.com",
@@ -51,6 +53,7 @@ const firebaseConfig = {
   appId: "1:553037442840:web:e171b1ca4d2005cb31786d",
   measurementId: "G-9TNB4DWSQB"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -148,31 +151,39 @@ const ALGO_DB = {
   }
 };
 
-// --- STATIC BACKUP DATA (Fallback for Grammar/Word Problems) ---
+const WORD_PROBLEM_TEMPLATES = [
+  { text: "{name} has {n1} {obj}. {HeShe} buys {n2} more. How many {obj} does {heShe} have now?", op: "+" },
+  { text: "{name} had {n1} {obj}. {HeShe} gave {n2} to a friend. How many {obj} are left?", op: "-" },
+  { text: "There are {n1} rows of trees. Each row has {n2} trees. How many trees are there in total?", op: "*" },
+  { text: "{name} wants to share {n1} {obj} equally among {n2} friends. How many {obj} does each friend get?", op: "/" },
+  { text: "A shopkeeper sold {n1} {obj} in the morning and {n2} in the evening. How many {obj} did he sell in total?", op: "+" },
+  { text: "{name} has {n1} rupees. A chocolate costs {n2} rupees. How much money will be left after buying one?", op: "-" },
+];
+
+const NAMES = ["Rohan", "Priya", "Rahul", "Sara", "Amit", "Neha"];
+const OBJECTS = ["apples", "balls", "pens", "books", "chocolates", "toys"];
+
+// --- STATIC BACKUP DATA (Fallback) ---
 const ENGLISH_STATIC = {
   grammar: [
     // UKG - 1
     { q: "___ apple", ans: "An", opts: ["A", "The"], level: 'ukg-pp' },
     { q: "___ boy", ans: "A", opts: ["An", "Two"], level: 'ukg-pp' },
-    { q: "___ sun", ans: "The", opts: ["A", "An"], level: 'ukg-pp' },
     { q: "I ___ a girl.", ans: "am", opts: ["is", "are"], level: 'ukg-pp' },
-    { q: "He ___ a boy.", ans: "is", opts: ["am", "are"], level: 'ukg-pp' },
     // 1-3
-    { q: "Plural of 'Cat'", ans: "Cats", opts: ["Cates", "Catss"], level: '1-3' },
-    { q: "Plural of 'Bus'", ans: "Buses", opts: ["Buss", "Buse"], level: '1-3' },
-    { q: "Opposite gender of 'Boy'", ans: "Girl", opts: ["Man", "Woman"], level: '1-3' },
-    { q: "She ___ playing.", ans: "is", opts: ["am", "are"], level: '1-3' },
-    { q: "They ___ eating.", ans: "are", opts: ["is", "am"], level: '1-3' },
+    { q: "Plural of 'Cat'", ans: "Cats", opts: ["Cates", "Kat", "Catz"], level: '1-3' },
+    { q: "Plural of 'Bus'", ans: "Buses", opts: ["Buss", "Buse", "Busis"], level: '1-3' },
+    { q: "Opposite gender of 'Boy'", ans: "Girl", opts: ["Man", "Woman", "Lady"], level: '1-3' },
+    { q: "She ___ playing.", ans: "is", opts: ["am", "are", "be"], level: '1-3' },
+    { q: "They ___ eating.", ans: "are", opts: ["is", "am", "was"], level: '1-3' },
     // 4-5
-    { q: "She ___ to school yesterday.", ans: "went", opts: ["go", "gone"], level: '4-5' },
-    { q: "He is ___ tallest boy.", ans: "the", opts: ["a", "an"], level: '4-5' },
-    { q: "The book is ___ the table.", ans: "on", opts: ["in", "at"], level: '4-5' },
-    { q: "We ___ happy.", ans: "are", opts: ["is", "am"], level: '4-5' },
+    { q: "He is ___ tallest boy.", ans: "the", opts: ["a", "an", "one"], level: '4-5' },
+    { q: "The book is ___ the table.", ans: "on", opts: ["in", "at", "to"], level: '4-5' },
+    { q: "Birds ___ in the sky.", ans: "fly", opts: ["flies", "flying", "flew"], level: '4-5' },
+    { q: "She ___ to school yesterday.", ans: "went", opts: ["go", "gone", "goes"], level: '4-5' },
     // 6-8
-    { q: "I have been waiting ___ 2 hours.", ans: "for", opts: ["since", "from"], level: '6-8' },
-    { q: "The train ___ already left.", ans: "has", opts: ["have", "had"], level: '6-8' },
-    { q: "If it rains, I ___ stay home.", ans: "will", opts: ["would", "should"], level: '6-8' },
-    { q: "She is good ___ Math.", ans: "at", opts: ["in", "on"], level: '6-8' },
+    { q: "I have been waiting ___ 2 hours.", ans: "for", opts: ["since", "from", "at"], level: '6-8' },
+    { q: "If it rains, I ___ stay home.", ans: "will", opts: ["would", "should", "can"], level: '6-8' },
   ],
 };
 
@@ -181,9 +192,6 @@ const STATIC_STORIES = [
   { q: "Priya made 12 Ladoos. Her mom made 8. How many Ladoos in total?", ans: 20, opts: [18, 20, 22, 15] },
   { q: "Rahul scored 25 runs. Virat scored 10 runs more than Rahul. How many runs did Virat score?", ans: 35, opts: [30, 35, 40, 25] },
   { q: "A shopkeeper sold 5 pens in the morning and 7 in the evening. Total pens?", ans: 12, opts: [10, 12, 14, 11] },
-  { q: "Tina had 20 rupees. She bought a chocolate for 5 rupees. How much money is left?", ans: 15, opts: [10, 15, 12, 18] },
-  { q: "There are 2 rows of trees. Each row has 6 trees. Total trees?", ans: 12, opts: [10, 12, 14, 18] },
-  { q: "Share 10 mangoes equally among 2 friends. How many each?", ans: 5, opts: [4, 5, 6, 2] }
 ];
 
 // --- GAME CONSTANTS & MAPPING ---
@@ -201,7 +209,7 @@ const MODES = {
   SHAPES: { id: 'shapes', name: 'Shapes', icon: <Shapes className="w-6 h-6" /> },
   COLORS: { id: 'colors', name: 'Colors', icon: <Palette className="w-6 h-6" /> },
   COMPARE: { id: 'compare', name: 'Compare', icon: <Ruler className="w-6 h-6" /> },
- 
+  
   // MATH OPS
   ADD: { id: 'add', name: 'Addition', icon: <Calculator className="w-6 h-6" /> },
   SUB: { id: 'sub', name: 'Subtraction', icon: <Calculator className="w-6 h-6" /> },
@@ -210,12 +218,12 @@ const MODES = {
   TABLES: { id: 'tables', name: 'Tables (1-20)', icon: <Grid3X3 className="w-6 h-6" /> },
   PATTERN: { id: 'pattern', name: 'Patterns', icon: <Brain className="w-6 h-6" /> },
   WORD_PROBLEMS: { id: 'word_problems', name: 'Word Problems', icon: <Feather className="w-6 h-6" /> },
- 
+  
   // ENGLISH
   SPELLING: { id: 'spelling', name: 'Spelling', icon: <Type className="w-6 h-6" /> },
   GRAMMAR: { id: 'grammar', name: 'Grammar', icon: <BookOpen className="w-6 h-6" /> },
   VOCAB: { id: 'vocab', name: 'Vocabulary', icon: <Wand2 className="w-6 h-6" /> },
-  TENSES: { id: 'tenses', name: 'Tenses', icon: <Languages className="w-6 h-6" /> },
+  TENSES: { id: 'tenses', name: 'Tenses', icon: <Type className="w-6 h-6" /> },
   POS: { id: 'pos', name: 'Parts of Speech', icon: <Tag className="w-6 h-6" /> },
 };
 
@@ -249,17 +257,17 @@ export default function App() {
   const [selectedSubject, setSelectedSubject] = useState('math');
   const [selectedMode, setSelectedMode] = useState(null);
   const [selectedTable, setSelectedTable] = useState(2); // Default table 2
- 
+  
   const [questions, setQuestions] = useState([]);
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [timer, setTimer] = useState(0);
   const [questionStartTime, setQuestionStartTime] = useState(0);
-  const [performanceData, setPerformanceData] = useState([]);
+  const [performanceData, setPerformanceData] = useState([]); 
   const [leaderboard, setLeaderboard] = useState([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiCoachMsg, setAiCoachMsg] = useState("");
-  const [feedback, setFeedback] = useState(null);
+  const [feedback, setFeedback] = useState(null); 
   const [aiBackgroundUpdate, setAiBackgroundUpdate] = useState(false);
 
   // --- REFS ---
@@ -282,24 +290,22 @@ export default function App() {
   // Fetch Leaderboard
   useEffect(() => {
     if (!user) return;
+    // Note: We avoid complex queries like orderBy/limit on snapshot to prevent index errors
+    // Sort and limit is done in memory
     const q = collection(db, 'artifacts', appId, 'public', 'data', 'math_master_leaderboard');
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Sort by score (desc), then time (asc)
       data.sort((a, b) => b.score - a.score || a.totalTime - b.totalTime);
       setLeaderboard(data.slice(0, 10));
     }, (err) => console.error("Leaderboard error:", err));
     return () => unsubscribe();
   }, [user]);
 
-  // Clean up timer on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, []);
-
   // --- GEMINI HELPERS ---
   const callGemini = async (prompt, isJson = false) => {
+    if (!apiKey) return null; // Skip if no API key
+
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
     const payload = {
       contents: [{ parts: [{ text: prompt }] }],
@@ -307,7 +313,7 @@ export default function App() {
     };
 
     const delays = [1000, 2000, 4000, 8000, 16000];
-   
+    
     for (let i = 0; i < delays.length; i++) {
       try {
         const response = await fetch(url, {
@@ -318,8 +324,10 @@ export default function App() {
 
         if (!response.ok) {
           if (response.status === 429 || response.status >= 500) {
+            // Retryable error
             throw new Error(`Retryable error: ${response.status}`);
           }
+          // Non-retryable
           return null;
         }
 
@@ -356,12 +364,13 @@ export default function App() {
         const isSynonym = Math.random() > 0.5;
         const question = isSynonym ? `Synonym of '${item.w}'?` : `Antonym of '${item.w}'?`;
         const ans = isSynonym ? item.s : item.a;
-       
+        
+        // Pick 3 random distractors from other words
         const distractors = [];
         while(distractors.length < 3) {
           const other = ALGO_DB.vocab[rand(ALGO_DB.vocab.length)];
           const wrong = Math.random() > 0.5 ? other.s : other.a;
-          if (wrong !== ans && !distractors.includes(wrong)) distractors.push(wrong);
+          if (wrong !== ans && wrong !== item.w && !distractors.includes(wrong)) distractors.push(wrong);
         }
         qs.push({ q: question, ans: ans, opts: [...distractors, ans].sort(() => Math.random() - 0.5), type: 'english' });
       }
@@ -373,40 +382,85 @@ export default function App() {
       else if (mode === 'spelling') {
         const word = ALGO_DB.spelling[rand(ALGO_DB.spelling.length)];
         const distractors = [];
-       
+        
+        // Improved misspelling algorithm: creates visually similar but non-words
         const makeWrong = (w) => {
           let wrong = w;
-          if (w.includes('ee')) wrong = w.replace('ee', 'ea');
-          else if (w.includes('ea')) wrong = w.replace('ea', 'ee');
-          else if (w.includes('i')) wrong = w.replace('i', 'e');
-          else if (w.includes('a')) wrong = w.replace('a', 'e');
-          else if (w.includes('o')) wrong = w.replace('o', 'u');
-          else wrong = w.slice(0, -1) + w.slice(-1) + w.slice(-1); // double last letter
+          const r = Math.random();
+          
+          if (r < 0.25) { // Vowel swap
+             wrong = w.replace('a', 'e').replace('e', 'i').replace('i', 'o').replace('o', 'u').replace('u', 'a');
+          } else if (r < 0.5) { // Double letter
+             if (w.length > 3) wrong = w.slice(0, 2) + w[2] + w.slice(2);
+          } else if (r < 0.75) { // Drop letter
+             if (w.length > 3) wrong = w.slice(0, -1);
+          } else { // Swap
+             if (w.length > 3) wrong = w[0] + w[2] + w[1] + w.slice(3);
+          }
+          
+          // Ensure it's not the same and capitalized correctly
           if (wrong === w) wrong = w + 'e';
-          return wrong;
+          return wrong.charAt(0).toUpperCase() + wrong.slice(1).toLowerCase();
         };
 
+        // Create 3 unique wrong spellings
         let attempts = 0;
         while(distractors.length < 3 && attempts < 20) {
           let wrong = makeWrong(word);
-          if (distractors.length === 1) wrong = word.replace('l', 'll');
-          if (distractors.length === 2) wrong = word.replace('e', '');
-         
           if (wrong !== word && !distractors.includes(wrong)) distractors.push(wrong);
           attempts++;
         }
-        while(distractors.length < 3) distractors.push(word + "s");
+        
+        // Fallback
+        if (distractors.length < 3) distractors.push(word.split('').reverse().join('').toLowerCase());
 
         qs.push({ q: "Correct spelling?", ans: word, opts: [...distractors, word].sort(() => Math.random() - 0.5), type: 'english' });
       }
       else if (mode === 'grammar') {
+        // Algorithmic Articles (A/An) - STRICT options
         const isAn = Math.random() > 0.5;
-        const noun = isAn
+        const noun = isAn 
           ? ALGO_DB.articles.an[rand(ALGO_DB.articles.an.length)]
           : ALGO_DB.articles.a[rand(ALGO_DB.articles.a.length)];
         const q = `___ ${noun}`;
         const ans = isAn ? "An" : "A";
-        qs.push({ q: q, ans: ans, opts: ["A", "An", "The"].sort(() => Math.random() - 0.5), type: 'english' });
+        // Fixed options for A/An to avoid ambiguity with "The"
+        qs.push({ q: q, ans: ans, opts: ["A", "An"], type: 'english' });
+      }
+      else if (mode === 'word_problems') {
+        // Algorithmic Word Problems
+        const template = WORD_PROBLEM_TEMPLATES[rand(WORD_PROBLEM_TEMPLATES.length)];
+        const name = NAMES[rand(NAMES.length)];
+        const obj = OBJECTS[rand(OBJECTS.length)];
+        const isFemale = ["Priya", "Sara", "Neha"].includes(name);
+        
+        // Generate numbers based on operator to ensure clean answers
+        let n1, n2, ans;
+        if (template.op === '+') {
+           n1 = rand(20) + 5; n2 = rand(10) + 1; ans = n1 + n2;
+        } else if (template.op === '-') {
+           n1 = rand(20) + 10; n2 = rand(9) + 1; ans = n1 - n2;
+        } else if (template.op === '*') {
+           n1 = rand(10) + 2; n2 = rand(5) + 2; ans = n1 * n2;
+        } else if (template.op === '/') {
+           n2 = rand(5) + 2; ans = rand(10) + 2; n1 = n2 * ans; // Ensure perfect division
+        }
+
+        // Replace placeholders
+        let qText = template.text
+          .replace("{name}", name)
+          .replace("{n1}", n1)
+          .replace("{n2}", n2)
+          .replace("{obj}", obj)
+          .replace(/{HeShe}/g, isFemale ? "She" : "He")
+          .replace(/{heShe}/g, isFemale ? "she" : "he");
+
+        qs.push({ 
+          q: qText, 
+          ans: ans, 
+          opts: generateOptions(ans, 0, 100), // Reuse existing math distractor logic
+          type: 'text' 
+        });
       }
     }
     return qs;
@@ -417,42 +471,51 @@ export default function App() {
     setAiLoading(false);
     const newQuestions = [];
     const count = 10;
-   
+    
     const tableToUse = specificTable || selectedTable;
 
     try {
-      if (['tenses', 'vocab', 'pos', 'spelling', 'grammar'].includes(modeId)) {
+      // 1. GENERATE QUESTIONS
+      // Check if mode is Algorithmic
+      if (['tenses', 'vocab', 'pos', 'spelling', 'grammar', 'word_problems'].includes(modeId)) {
+         
          if (modeId === 'grammar') {
             const algoQs = createAlgorithmicQuestion('grammar', 5);
             const pool = ENGLISH_STATIC[modeId] || [];
+            // FIX: Ensure options are unique and contain the answer
             const staticQs = [...pool].sort(() => Math.random() - 0.5).slice(0, 5)
-                .map(q => ({...q, type: 'english', opts: q.opts.sort(() => Math.random() - 0.5)}));
+                .map(q => {
+                    // Filter out the answer from existing opts if present to avoid duplication
+                    const distractors = q.opts.filter(o => o !== q.ans).slice(0, 3);
+                    return {
+                      ...q, 
+                      type: 'english', 
+                      opts: [...distractors, q.ans].sort(() => Math.random() - 0.5)
+                    };
+                });
             setQuestions([...algoQs, ...staticQs].sort(() => Math.random() - 0.5));
          } else {
             setQuestions(createAlgorithmicQuestion(modeId, count));
          }
       }
-      else if (modeId === 'word_problems') {
-         const pool = STATIC_STORIES;
-         const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, count);
-         setQuestions(shuffled.map(q => ({...q, type: 'english', opts: q.opts.sort(() => Math.random() - 0.5)})));
-      }
       else {
+         // Math modes
          for(let i=0; i<count; i++) {
             newQuestions.push(createInstantQuestion(modeId, selectedGrade, tableToUse));
          }
          setQuestions(newQuestions);
       }
-     
+      
       startGameSession();
 
-      // Background AI Fetch
-      const needsAI = modeId === 'word_problems';
+      // 2. BACKGROUND AI FETCH
+      // Now only used if you manually enable it for advanced stuff, defaults to OFF/Algorithmic for zero cost.
+      const needsAI = false; 
 
-      if (needsAI) {
+      if (needsAI && apiKey) {
         setAiBackgroundUpdate(true);
         const prompt = buildAIPrompt(modeId, selectedGrade);
-       
+        
         callGemini(prompt, true).then(aiResponse => {
           setAiBackgroundUpdate(false);
           if (aiResponse) {
@@ -467,9 +530,10 @@ export default function App() {
                   type: 'english'
                 };
               });
-             
+              
               setQuestions(prev => {
                 const updated = [...prev];
+                // Inject AI questions starting from 4th question to allow buffer
                 for(let i=0; i<aiQs.length; i++) {
                   if(i+3 < updated.length) updated[i+3] = aiQs[i];
                 }
@@ -491,7 +555,8 @@ export default function App() {
   // --- LOGIC: STATIC QUESTION GENERATOR ---
   const createInstantQuestion = (mode, grade, tableNum = 2) => {
     const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-   
+    
+    // -- DIFFICULTY CONFIG --
     let maxNum = 9;
     if (grade === 'ukg-pp') maxNum = 15;
     if (grade === '1-3') maxNum = 50;
@@ -507,6 +572,7 @@ export default function App() {
       q = `${tableNum} × ${b} = ?`;
       opts = generateOptions(ans, 0, tableNum * 12);
     }
+    // -- MATH LOGIC --
     else if (mode === 'counting') {
       const limit = grade === 'pg-lkg' ? 5 : 9;
       ans = rand(1, limit);
@@ -514,7 +580,7 @@ export default function App() {
       icon = ['star', 'heart', 'sun'][rand(0,2)];
       q = "Count items";
       opts = generateOptions(ans, 1, 10);
-    }
+    } 
     else if (mode === 'shapes') {
       const keys = Object.keys(SHAPES_MAP);
       ans = keys[rand(0, keys.length-1)];
@@ -539,13 +605,13 @@ export default function App() {
     else if (['add', 'sub', 'mul', 'div'].includes(mode)) {
       let a = rand(1, maxNum), b = rand(1, maxNum);
       if (mode === 'add') { ans = a + b; q = `${a} + ${b} = ?`; }
-      if (mode === 'sub') {
-        if (a < b) [a, b] = [b, a];
-        ans = a - b; q = `${a} - ${b} = ?`;
+      if (mode === 'sub') { 
+        if (a < b) [a, b] = [b, a]; 
+        ans = a - b; q = `${a} - ${b} = ?`; 
       }
-      if (mode === 'mul') {
+      if (mode === 'mul') { 
         b = rand(1, grade === '1-3' ? 5 : 12); // Smaller multiplier
-        ans = a * b; q = `${a} × ${b} = ?`;
+        ans = a * b; q = `${a} × ${b} = ?`; 
       }
       if (mode === 'div') {
         b = rand(2, 10);
@@ -564,7 +630,7 @@ export default function App() {
       q = seq.join(', ');
       opts = generateOptions(ans, 0, 100);
     }
-   
+    
     return { q, ans, opts, type, icon };
   };
 
@@ -580,6 +646,7 @@ export default function App() {
       }
       attempts++;
     }
+    // Fill if couldn't generate enough close distractors
     while(set.size < 4) {
        set.add(Math.floor(Math.random() * 100));
     }
@@ -590,7 +657,8 @@ export default function App() {
   const buildAIPrompt = (mode, grade) => {
     const gradeLabel = GRADE_GROUPS.find(g => g.id === grade)?.label || "Grade 4";
     const context = "CBSE English Medium School standard. Context: Indian culture/Daily life.";
-   
+    
+    // Math Word Problems (Story Mode)
     if (mode === 'word_problems') {
        return `Generate 7 unique math word problems for ${gradeLabel} student. ${context}. Operations: Add/Sub/Mul/Div. Keep numbers appropriate for grade. Format JSON: [{question: "text", answer: number, options: [num1, num2, num3]}]`;
     }
@@ -608,8 +676,15 @@ export default function App() {
     setTimer(20); setQuestionStartTime(Date.now());
     timerRef.current = setInterval(() => {
       setTimer(prev => {
-        if (prev <= 1) {
-           return 0;
+        if (prev <= 1) { 
+           // Need to handle timeout in the next tick to avoid state conflict
+           // but accessing state inside interval is tricky without refs.
+           // We'll rely on the useEffect or just call handleAnswer here carefully.
+           // However, handleAnswer depends on currentQIndex which is stale here.
+           // Simplified approach: just let the timer reach 0 and the effect will trigger? 
+           // No, let's just force a timeout call.
+           // Best way: Use a separate useEffect tracking timer = 0
+           return 0; 
         }
         return prev - 1;
       });
@@ -619,68 +694,89 @@ export default function App() {
   // Watch for timer hitting 0
   useEffect(() => {
     if (timer === 0 && gameState === 'playing' && questionStartTime > 0) {
+       // Only trigger if we actually started a question (questionStartTime > 0)
+       // And we haven't already moved on (handled by handleAnswer clearing interval)
        handleAnswer(null, true);
     }
   }, [timer, gameState]);
 
 
   const handleAnswer = (selected, isTimeout = false) => {
-    // FIX: Prevent double clicks during feedback animation
-    if (feedback) return;
-
     clearInterval(timerRef.current);
     const currentQ = questions[currentQIndex];
-    if (!currentQ) return;
+    if (!currentQ) return; 
 
+    // For text/english answers, we need to match strings carefully? 
+    // Usually strict equality is fine as long as options came from same source.
     const isCorrect = !isTimeout && selected === currentQ.ans;
     const timeTaken = (Date.now() - questionStartTime) / 1000;
-   
+    
     setPerformanceData(prev => [...prev, { q: currentQIndex + 1, time: Math.min(timeTaken, 20), isCorrect }]);
 
-    if (isCorrect) { setScore(prev => prev + 1); setFeedback('correct'); }
+    if (isCorrect) { setScore(prev => prev + 1); setFeedback('correct'); } 
     else { setFeedback('wrong'); }
 
     setTimeout(() => {
       setFeedback(null);
-      if (currentQIndex < questions.length - 1) {
-          setCurrentQIndex(prev => prev + 1);
-          startTimer();
-      }
-      else {
-          finishGame();
+      if (currentQIndex < questions.length - 1) { 
+          setCurrentQIndex(prev => prev + 1); 
+          startTimer(); 
+      } 
+      else { 
+          finishGame(); 
       }
     }, 1000);
   };
 
   const finishGame = async () => {
     setGameState('result');
+    // Calculate final stats based on current state, not stale closure
+    // We can't use 'score' directly inside a closure easily if this was async called from timer
+    // But finishGame is called from handleAnswer which has fresher state access via prev if updated.
+    // However, since handleAnswer updates score and calls finishGame in setTimeout, 
+    // the score variable here might be 1 tick old if not careful.
+    // Ideally we pass the final score to finishGame or use a ref.
+    // For simplicity in this structure, we'll assume React batching helps us or user accepts 1 frame delay.
+    // Actually, setScore is async. The Score inside finishGame might be old.
+    // FIX: rely on performanceData to calculate score.
+    
+    // We need to wait for performanceData update? 
+    // No, handleAnswer updates performanceData then calls finishGame in setTimeout (1s).
+    // The state should be updated by then.
+    
+    // Recalculate score from performanceData in the render or use a ref?
+    // Let's rely on the score state for now, but strictly speaking,
+    // recalculating from performance data in the save function is safer.
+    
+    // We'll do the save logic in a useEffect triggered by gameState === 'result'
+    // to ensure we have the latest score/performanceData.
   };
- 
+  
   // Effect to handle Game Over saving
   useEffect(() => {
       if (gameState === 'result') {
         const saveResult = async () => {
-            // FIX: rely on performanceData to calculate score, ensuring no stale closures or double counts
             const calculatedScore = performanceData.filter(d => d.isCorrect).length;
             const totalTime = performanceData.reduce((acc, curr) => acc + curr.time, 0);
-           
+            
+            // Correct the local score display if needed
             setScore(calculatedScore);
 
             if (user) {
                 try {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'math_master_leaderboard'), {
-                    name: playerName,
-                    score: calculatedScore,
-                    mode: selectedMode,
+                    name: playerName, 
+                    score: calculatedScore, 
+                    mode: selectedMode, 
                     grade: selectedGrade,
-                    totalTime: Math.round(totalTime * 10) / 10,
+                    totalTime: Math.round(totalTime * 10) / 10, 
                     timestamp: serverTimestamp()
                     });
                 } catch (e) { console.error("Save failed", e); }
             }
 
             const messages = [
-              "Great job!", "Super Star!", "Keep it up!", "Math Wizard!",
+              "Great job!", "Super Star!", "Keep it up!", "Math Wizard!", 
               "Awesome!", "Fantastic work!", "You are doing great!", "Way to go!",
               "Excellent!", "Brilliant!"
             ];
@@ -688,8 +784,7 @@ export default function App() {
         };
         saveResult();
       }
-  // FIX: Added performanceData to dependencies to ensure accurate score calculation
-  }, [gameState, performanceData, user, playerName, selectedMode, selectedGrade]);
+  }, [gameState]);
 
 
   // --- RENDER HELPERS ---
@@ -711,7 +806,7 @@ export default function App() {
   };
 
   // --- SCREENS ---
- 
+  
   // 1. WELCOME
   if (gameState === 'welcome') {
     return (
@@ -759,10 +854,10 @@ export default function App() {
         <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-lg">
           <h2 className="text-2xl font-bold text-center mb-2 text-indigo-900">Select Table</h2>
           <p className="text-center text-gray-500 mb-6">Choose a number to practice tables (1 to 20)</p>
-         
+          
           <div className="grid grid-cols-5 gap-3">
             {Array.from({length: 20}, (_, i) => i + 1).map(num => (
-              <button
+              <button 
                 key={num}
                 onClick={() => {
                   setSelectedTable(num);
@@ -775,8 +870,8 @@ export default function App() {
               </button>
             ))}
           </div>
-          <button
-            onClick={() => setGameState('menu')}
+          <button 
+            onClick={() => setGameState('menu')} 
             className="mt-8 w-full text-indigo-400 font-bold hover:text-indigo-600"
           >
             Back to Menu
@@ -790,7 +885,7 @@ export default function App() {
   if (gameState === 'menu') {
     const config = GRADE_CONTENT_MAP[selectedGrade] || GRADE_CONTENT_MAP['pg-lkg'];
     const availableModes = config[selectedSubject].map(key => MODES[key]).filter(Boolean);
-   
+    
     return (
       <div className="min-h-screen bg-indigo-50 p-4 md:p-8 font-sans">
         <div className="max-w-4xl mx-auto">
@@ -801,7 +896,7 @@ export default function App() {
 
           <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <h2 className="text-2xl font-bold text-indigo-900">Hi, {playerName}!</h2>
-           
+            
             {/* SUBJECT TOGGLE (Hide English for PG-LKG if empty) */}
             {config.english.length > 0 && (
               <div className="flex bg-white rounded-xl p-1 shadow-sm border border-indigo-100">
@@ -809,7 +904,7 @@ export default function App() {
                    <Calculator className="w-4 h-4 inline mr-2" />Math
                  </button>
                  <button onClick={() => setSelectedSubject('english')} className={`px-6 py-2 rounded-lg font-bold transition-all ${selectedSubject === 'english' ? 'bg-pink-500 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
-                   <Languages className="w-4 h-4 inline mr-2" />English
+                   <BookOpen className="w-4 h-4 inline mr-2" />English
                  </button>
               </div>
             )}
@@ -818,16 +913,16 @@ export default function App() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 animate-in fade-in duration-300">
             {availableModes.map(m => (
-              <button
-                key={m.id}
-                onClick={() => {
+              <button 
+                key={m.id} 
+                onClick={() => { 
                   if (m.id === 'tables') {
                     setGameState('table_select');
                   } else {
-                    setSelectedMode(m.id);
-                    generateQuestions(m.id);
+                    setSelectedMode(m.id); 
+                    generateQuestions(m.id); 
                   }
-                }}
+                }} 
                 className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md border-b-4 border-indigo-100 active:border-b-0 active:translate-y-1 transition-all flex flex-col items-center gap-3"
               >
                 <div className={`p-4 rounded-full ${selectedSubject === 'math' ? 'bg-indigo-50 text-indigo-600' : 'bg-pink-50 text-pink-600'}`}>{m.icon}</div>
@@ -859,7 +954,7 @@ export default function App() {
         <div className={`grid ${q.opts.length === 3 ? 'grid-cols-3' : 'grid-cols-2'} gap-4 w-full max-w-2xl mt-8`}>
           {q.opts.map((opt, idx) => (
             <button key={idx} onClick={() => handleAnswer(opt)} className="bg-slate-800 hover:bg-slate-700 text-white p-6 rounded-2xl shadow-lg active:scale-95 transition-all border-b-4 border-slate-950 flex items-center justify-center">
-              {q.type === 'shape' ? <div className="transform scale-75 pointer-events-none">{SHAPES_MAP[opt]}</div> :
+              {q.type === 'shape' ? <div className="transform scale-75 pointer-events-none">{SHAPES_MAP[opt]}</div> : 
                q.type === 'color' ? <div className={`w-12 h-12 rounded-full border-2 border-white pointer-events-none ${COLORS_MAP[opt]}`} /> :
                <span className={`font-bold ${String(opt).length > 10 ? 'text-lg' : 'text-2xl'}`}>{opt}</span>}
             </button>
@@ -890,21 +985,21 @@ export default function App() {
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-indigo-100 h-[300px]">
-              <Bar
-                data={{
-                  labels: performanceData.map(d => `Q${d.q}`),
-                  datasets: [{
-                    label: 'Time',
-                    data: performanceData.map(d => d.time),
-                    backgroundColor: performanceData.map(d => d.isCorrect ? '#22c55e' : '#ef4444'),
-                    borderRadius: 4
-                  }]
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: { legend: { display: false } }
-                }}
+              <Bar 
+                data={{ 
+                  labels: performanceData.map(d => `Q${d.q}`), 
+                  datasets: [{ 
+                    label: 'Time', 
+                    data: performanceData.map(d => d.time), 
+                    backgroundColor: performanceData.map(d => d.isCorrect ? '#22c55e' : '#ef4444'), 
+                    borderRadius: 4 
+                  }] 
+                }} 
+                options={{ 
+                  responsive: true, 
+                  maintainAspectRatio: false, 
+                  plugins: { legend: { display: false } } 
+                }} 
               />
             </div>
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-indigo-100 h-[300px] flex flex-col">
