@@ -81,11 +81,11 @@ const GEMINI_MODEL = "gemini-1.5-flash-8b";
 // 4. The ID is the part between /d/ and /view. (e.g., 123456789ABC)
 // 5. Add it below.
 const VIDEO_LIBRARY = [
-  { id: '1', title: 'Learn Counting 1-10', driveId: '12345_REPLACE_WITH_REAL_ID', grade: 'pg-lkg', subject: 'math' },
-  { id: '2', title: 'Shapes Song', driveId: '67890_REPLACE_WITH_REAL_ID', grade: 'pg-lkg', subject: 'math' },
-  { id: '3', title: 'Addition Tricks', driveId: 'ABCDE_REPLACE_WITH_REAL_ID', grade: '1-3', subject: 'math' },
-  { id: '4', title: 'Nouns & Verbs', driveId: 'FGHIJ_REPLACE_WITH_REAL_ID', grade: '1-3', subject: 'english' },
-  { id: '5', title: 'Multiplication Tables', driveId: 'KLMNO_REPLACE_WITH_REAL_ID', grade: '4-5', subject: 'math' },
+  { id: '1', title: 'Learn Counting 1-10', driveId: '1QUBeN5DtHOoEZalfnoFks5yZUk1pKFRx', grade: 'pg-lkg', subject: 'math' },
+  { id: '2', title: 'Shapes Song', driveId: '1QUBeN5DtHOoEZalfnoFks5yZUk1pKFRx', grade: 'pg-lkg', subject: 'math' },
+  { id: '3', title: 'Addition Tricks', driveId: '1QUBeN5DtHOoEZalfnoFks5yZUk1pKFRx', grade: '1-3', subject: 'math' },
+  { id: '4', title: 'Nouns & Verbs', driveId: '1QUBeN5DtHOoEZalfnoFks5yZUk1pKFRx', grade: '1-3', subject: 'english' },
+  { id: '5', title: 'Multiplication Tables', driveId: '1QUBeN5DtHOoEZalfnoFks5yZUk1pKFRx', grade: '4-5', subject: 'math' },
 ];
 
 // --- ALGORITHMIC GENERATORS & DATABASES ---
